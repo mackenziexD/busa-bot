@@ -23,6 +23,7 @@ function isset (accessor) {
     }
   }
 
+
 handler(__dirname + '/commands', client, { customPrefix: config.prefix });
 
 client.on('ready', () => {
@@ -69,7 +70,7 @@ if (config.feeder_channel) {
                 // check if sent is false
                 if (sent === false) {
                                                         //  corp id                                     corp id
-                    if (message.attackers[i].alliance_id == 99003581 && message.victim.alliance_id !== 99003581) {
+                    if (message.attackers[i].corporation_id == 2014367342 && message.victim.corporation_id !== 2014367342) {
                         console.log("found BUSA")
                         // check if attrackers[i] only has 1 index
                         if (message.attackers.length == 1) {
@@ -183,7 +184,7 @@ if (config.feeder_channel) {
         } 
 
         //                                     corp id
-        if (message.victim.alliance_id == 99003581 && NoBUSAAttacker == true) {
+        if (message.victim.corporation_id == 2014367342 && NoBUSAAttacker == true) {
                 if(config.show_pods !== true){
                     if(message.victim.ship_type_id == 670){
                         return;

@@ -5,8 +5,8 @@ module.exports = {
 	id: 'killfeed-update',
 	exec: (call) => {
 
-        // check if users has `Director` role
-        if (call.message.member.roles.cache.find(r => r.name === 'Director')) {
+        // check if users has `Director` role or if config.bot.owner is equal to the user id
+        if (call.message.member.roles.cache.find(r => r.name === 'Director') || call.message.author.id === config.helious) {
 
             call.prompt('What\'s the lowest value killmails you want to show?\n example `1,000,000,000` would be 1B ISK', { time: 60000 }).then((msg) => {
                 // Resolves with the response.

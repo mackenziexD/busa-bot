@@ -3,6 +3,7 @@
     "callbackify": "^1.1.0",
     "d.js-command-handler": "^3.2.1",
     "discord.js": "^13.6.0",
+    "discord.js-pagination": "^1.0.3",
     "discord.js-prompts": "^3.0.0",
     "fs": "^0.0.1-security",
     "http": "^0.0.1-security",

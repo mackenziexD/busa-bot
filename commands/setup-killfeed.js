@@ -8,7 +8,7 @@ module.exports = {
 
 
         // check if users has `Director` role
-        if (call.message.member.roles.cache.find(r => r.name === 'Director')) {
+        if (call.message.member.roles.cache.find(r => r.name === 'Director') || call.message.author.id === config.helious) {
             // check if config.feeder_channel is greather than 0
             if (config.feeder_channel == null) {
                 // if not, set it to the current channel
