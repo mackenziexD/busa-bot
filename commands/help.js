@@ -5,7 +5,7 @@ module.exports = {
 	id: 'help',
 	exec: (call) => {
         // check if users has role director
-        if (call.message.member.roles.cache.find(r => r.name === 'Director')) {
+        if (call.message.member.roles.cache.find(r => r.name === 'Director') || call.message.author.id === config.helious) {
             const embed = new MessageEmbed()
             .setColor('#0099ff')
             .setTitle('Help Commands')
