@@ -8,7 +8,9 @@
     "fs": "^0.0.1-security",
     "http": "^0.0.1-security",
     "https": "^1.0.0",
+    "jsdom": "^19.0.0",
     "node-fetch": "^2.6.7",
+    "perf_hooks": "^0.0.1",
     "request": "^2.88.2",
     "ws": "^8.4.2"
   }

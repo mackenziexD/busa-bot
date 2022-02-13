@@ -41,9 +41,6 @@ client.on('ready', () => {
     client.user.setActivity('KRABBING', { type: 'PLAYING' });
 });
 
-
-
-
 ws.on('error', (error) => {
     hook.error(' ', 'Web Socket Client Error', error);
     console.error(error);
@@ -82,9 +79,45 @@ if (config.feeder_channel) {
         for (let i = 0; i < message.attackers.length; i++) {
             if(AlreadySent == true ) { break; }
             if(config.show_pods == false) {  if (message.victim.ship_type_id == 670) { break; } }
+            if (message.victim.ship_type_id == 60244) { break; }
+
+            if(message.attackers[i].corporation_id == '2014367342' && message.victim.corporation_id == '2014367342'){
+                if (message.attackers[i].character_id) {                        
+                    request("https://esi.evetech.net/latest/characters/"+message.attackers[i].character_id+"/?datasource=tranquility", function (error, response, body) {
+                            // check if error is null
+                        if (!error && response.statusCode == 200) {
+                            // parse response
+                            let character = JSON.parse(body);
+                            // request to get 'https://esi.evetech
+                            request("https://esi.evetech.net/latest/universe/types/"+message.victim.ship_type_id+"/?datasource=tranquility&language=en", function (error, response, body) {
+                                let ship = JSON.parse(body);
+                                request("https://esi.evetech.net/latest/universe/types/"+message.attackers[i].ship_type_id+"/?datasource=tranquility&language=en", function (error, response, body) {
+                                    let AttackerShip = JSON.parse(body);
+                                    const embed = new MessageEmbed()
+                                    .setTitle(`GET MEME'D`)
+                                    .setDescription(character.name+' has killed a '+ship.name+' in a '+AttackerShip.name)
+                                    .setThumbnail('https://images.evetech.net/types/'+message.victim.ship_type_id+'/render?size=128')
+                                    .addField('Value', totalISK+' ISK')
+                                    .setURL(message.zkb.url)
+                                    .setColor('#EB459E')
+                                    .setFooter('Steaming From Zkillboard')
+                                    .setTimestamp(Date.now());
+
+                                    console.log(`${character.name} killed a ${ship.name}`);
+
+                                    client.channels.cache.get(config.feeder_channel).send({ embeds: [embed] });
+                                });
+                            });
+                        }
+                    });
+                    AlreadySent = true;
+                    WasKill = true;
+                }
+                if(WasKill == true){ break;}
+            }
 
             // check if solo kill
-            if (message.zkb.solo == true && message.attackers[i].alliance_id == '99005338' ) {
+            if (message.zkb.solo == true && message.attackers[i].corporation_id == '2014367342' ) {
                 // if pod break loop 
                 console.log(message.zkb.url);
                 
@@ -124,7 +157,7 @@ if (config.feeder_channel) {
                 } else { console.log(`Killmail is less than than ${config.kill_limit}ISK`);}
             }
             // check if gang kill
-            else if (message.attackers[i].alliance_id && message.attackers[i].alliance_id == '99005338' ) {
+            else if (message.attackers[i].alliance_id && message.attackers[i].corporation_id == '2014367342' ) {
                 // if pod break loop 
                 console.log(message.zkb.url);
                 
@@ -164,11 +197,12 @@ if (config.feeder_channel) {
                 } else { console.log(`Killmail is less than than ${config.kill_limit}ISK`);}
             } else { console.log("Wasn't BUSA"); }
         }
-        if (message.victim.alliance_id == '99005338') {
+
+        if (message.victim.corporation_id == '2014367342') {
             // check if zkb.totalValue is greater than 500000000 
             console.log(message.zkb.url);
             if (message.zkb.totalValue > config.loss_limit) {
-                        // request json from "https://esi.evetech.net/latest/characters/96834527/?datasource=tranquility" and get name from response
+                // request json from "https://esi.evetech.net/latest/characters/96834527/?datasource=tranquility" and get name from response
                 request("https://esi.evetech.net/latest/characters/"+message.victim.character_id+"/?datasource=tranquility", function (error, response, body) {
                                     // check if error is null
                                     if (!error && response.statusCode == 200) {
