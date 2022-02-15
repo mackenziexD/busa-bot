@@ -29,16 +29,17 @@ function isset (accessor) {
 handler(__dirname + '/commands', client, { customPrefix: config.prefix });
 
 client.on('guildMemberAdd', member => {
-    client.channels.cache.get('940219767908880424').send('**' + member.user.username + '**, has joined the server!'); 
+    client.channels.cache.get(config.welcome).send('**' + member.user.username + '**, has joined the server!'); 
 });
 
 client.on('guildMemberRemove', member => {
-    client.channels.cache.get('940219767908880424').send('**' + member.user.username + '**, has left the server');
+    client.channels.cache.get(config.welcome).send('**' + member.user.username + '**, has left the server');
 });
 
 client.on('ready', () => {
 	console.log(client.user.username + ' has successfully booted up.');
-    client.user.setActivity('KRABBING', { type: 'PLAYING' });
+    client.user.setActivity('Space Odyssey', { type: 'PLAYING' });
+    client.user.setStatus('dnd');
 });
 
 ws.on('error', (error) => {
