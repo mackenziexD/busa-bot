@@ -17,7 +17,7 @@ module.exports = {
             .addField('!lookup {character}', '\n Pulls main and alts from seat of character')
             .addField('!setup-killfeed', '\n Pulls corp losses and kills from zkillboard with parameters that can be set') 
             .addField('!killfeed-update', '\n Updates the parameters for killfeed') 
-            .addField('!discord', '\n See what members are not in discord')
+            .addField('!discord [BROKEN]', '\n See what members are not in discord')
             .addField('!purge', '\n Get characters from seat that have less than 30 kills in 90 days')
             .setTimestamp(Date.now())
             .setFooter({ text: 'Created By: Helious#4607'});

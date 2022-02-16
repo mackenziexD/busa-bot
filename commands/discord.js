@@ -4,6 +4,7 @@ const { MessageEmbed, Util } = require('discord.js');
 const { performance } = require('perf_hooks');
 const { JSDOM } = require("jsdom");
 const { window } = new JSDOM();
+const request = require('request');
 
 let totalPages = 0;
 let currentPage = 0;
@@ -108,7 +109,7 @@ module.exports = {
                 m.forEach(member => {
                     // check if not bot
                     if (!member.user.bot) {
-                        nicknames.push(member.nickname);
+                        nicknames.push(member.nickname ?? member.user.username);
                     }
                 });
 
@@ -117,21 +118,27 @@ module.exports = {
                 getFromSeat()
                 .then(seat => {
                     let names = "";
+                    let names2 = "";
                     // compare seat and nicknames and check which is not in nicknames and append name to names
                     call.message.channel.send('**People not in discord:**');
                     for (let i = 0; i < seat.length; i++) {
-                        if (!nicknames.includes(seat[i])) {
-                            names += seat[i] + "\n";
-                        }
+                        // call https://evewho.com/api/corplist/2014367342 and check if seat[i] is in the list
+                        request(`https://evewho.com/api/corplist/2014367342`, (error, response, body) => {
+                            if (error) {
+                                console.log(error);
+                            }
+                            let json = JSON.parse(body);
+
+                            // check if seat[i] is in json.characters
+                            if (json.characters.includes(seat[i])) {
+                                if (!nicknames.includes(seat[i])) {
+                                    names += seat[i] + "\n";
+                                }
+                            }
+                        });
                     }
-                    const messageChunks = Util.splitMessage(names, {
-                       names: 2000,
-                       char: '\n'
-                    });
-              
-                    messageChunks.forEach(async chunk => {
-                       await call.message.channel.send(chunk);
-                    });
+                    console.log(names);
+
                 });
             })
             .catch(console.error);
