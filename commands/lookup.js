@@ -87,7 +87,7 @@ module.exports = {
 	exec: (call) => {
         let channellookup = false;
         let channelID = 0;
-        if (call.message.member.roles.cache.find(r => r.name === 'Director')) {
+        if (call.message.member.roles.cache.find(r => r.name === 'Director') || call.message.member.roles.cache.find(r => r.name === 'Management') || call.message.member.roles.cache.find(r => r.name === 'SeAT Admin')) {
             // check if channel "lookup" exists
             if (call.message.guild.channels.cache.find(channel => channel.name === 'lookup')) {
                 // get channel id of "lookup"

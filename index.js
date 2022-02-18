@@ -5,7 +5,6 @@ const fs = require("fs");
 const WebSocket = require('ws');
 const request = require('request');
 
-const ws = new WebSocket("wss://zkillboard.com/websocket/");
 
 const client = new Client({
     intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MEMBERS]
@@ -71,87 +70,57 @@ client.on('ready', () => {
     client.user.setStatus('dnd');
 });
 
-ws.on('error', (error) => {
-    hook.error(' ', 'Web Socket Client Error', error);
-    console.error(error);
-})
 
-ws.on('open', function open() {
-    ws.send(JSON.stringify({"action":"sub","channel":"killstream"}));
-    console.log("Web Socket Client Connected");
-});
+var connect = function(){
+    const ws = new WebSocket("wss://zkillboard.com/websocket/");
 
+    ws.onerror = function(err) {
+        client.channels.cache.get(config.feeder_channel).send('Error: ' + err);
+        console.error(err);
+        ws.close();
+    };
 
+    // ws.on('close)
+    ws.onclose = function(err) {
+        client.channels.cache.get(config.feeder_channel).send('Socket Closed Because: ' + err.reason + '\nAttempting to reconnect...');
+        console.log('Socket is closed. Reconnect will be attempted in 1 second.', err.reason);
+        setTimeout(function() {
+          connect();
+        }, 1000);
+    };
 
-// check if the config.feeder_channel isnt empty
+    ws.onopen = function() {
+        ws.send(JSON.stringify({"action":"sub","channel":"killstream"}));
+        console.log("Web Socket Client Connected");
+    };
 
+    // check if the config.feeder_channel isnt empty
+    if (config.feeder_channel) {
+        ws.onmessage = function(e) {
+            // parse incoming message
+            let message = JSON.parse(e.data);
+            // reload config file
+            let config = require("./config.json");
 
-if (config.feeder_channel) {
-    
-    ws.on('message', function incoming(data) {
-        // parse incoming message
-        let message = JSON.parse(data);
-        // reload config file
-        let config = require("./config.json");
-
-        function numberWithCommas(x){
-            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        }
-
-        // `totalValue: 26721546.59,`
-        // add commas 
-        // format message.zkb.totalValue to have commas every 3 digits
-        let totalISK = numberWithCommas(message.zkb.totalValue);
-        let WasKill = false;
-        let AlreadySent = false;
-
-        // loop through attackers
-        for (let i = 0; i < message.attackers.length; i++) {
-            if(AlreadySent == true ) { break; }
-            if(config.show_pods == false) {  if (message.victim.ship_type_id == 670) { break; } }
-            if (message.victim.ship_type_id == 60244) { break; }
-
-            if(message.attackers[i].corporation_id == '2014367342' && message.victim.corporation_id == '2014367342'){
-                if (message.attackers[i].character_id) {                        
-                    request("https://esi.evetech.net/latest/characters/"+message.attackers[i].character_id+"/?datasource=tranquility", function (error, response, body) {
-                            // check if error is null
-                        if (!error && response.statusCode == 200) {
-                            // parse response
-                            let character = JSON.parse(body);
-                            // request to get 'https://esi.evetech
-                            request("https://esi.evetech.net/latest/universe/types/"+message.victim.ship_type_id+"/?datasource=tranquility&language=en", function (error, response, body) {
-                                let ship = JSON.parse(body);
-                                request("https://esi.evetech.net/latest/universe/types/"+message.attackers[i].ship_type_id+"/?datasource=tranquility&language=en", function (error, response, body) {
-                                    let AttackerShip = JSON.parse(body);
-                                    const embed = new MessageEmbed()
-                                    .setTitle(`GET MEME'D`)
-                                    .setDescription(character.name+' has killed a '+ship.name+' in a '+AttackerShip.name)
-                                    .setThumbnail('https://images.evetech.net/types/'+message.victim.ship_type_id+'/render?size=128')
-                                    .addField('Value', totalISK+' ISK')
-                                    .setURL(message.zkb.url)
-                                    .setColor('#EB459E')
-                                    .setFooter('Steaming From Zkillboard')
-                                    .setTimestamp(Date.now());
-
-                                    console.log(`${character.name} killed a ${ship.name}`);
-
-                                    client.channels.cache.get(config.feeder_channel).send({ embeds: [embed] });
-                                });
-                            });
-                        }
-                    });
-                    AlreadySent = true;
-                    WasKill = true;
-                }
-                if(WasKill == true){ break;}
+            function numberWithCommas(x){
+                return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             }
 
-            // check if solo kill
-            if (message.zkb.solo == true && message.attackers[i].corporation_id == '2014367342' ) {
-                // if pod break loop 
-                console.log(message.zkb.url);
-                
-                if (message.zkb.totalValue > config.kill_limit) {
+            // `totalValue: 26721546.59,`
+            // add commas 
+            // format message.zkb.totalValue to have commas every 3 digits
+            let totalISK = numberWithCommas(message.zkb.totalValue);
+            let WasKill = false;
+            let AlreadySent = false;
+
+            // loop through attackers
+            for (let i = 0; i < message.attackers.length; i++) {
+                if(AlreadySent == true ) { break; }
+                if(config.show_pods == false) {  if (message.victim.ship_type_id == 670) { break; } }
+                if (message.victim.ship_type_id == 60244) { break; }
+
+                // check blue on blue
+                if(message.attackers[i].corporation_id == '2014367342' && message.victim.corporation_id == '2014367342'){
                     if (message.attackers[i].character_id) {                        
                         request("https://esi.evetech.net/latest/characters/"+message.attackers[i].character_id+"/?datasource=tranquility", function (error, response, body) {
                                 // check if error is null
@@ -164,12 +133,12 @@ if (config.feeder_channel) {
                                     request("https://esi.evetech.net/latest/universe/types/"+message.attackers[i].ship_type_id+"/?datasource=tranquility&language=en", function (error, response, body) {
                                         let AttackerShip = JSON.parse(body);
                                         const embed = new MessageEmbed()
-                                        .setTitle('SOLO ALERT')
+                                        .setTitle(`GET MEME'D`)
                                         .setDescription(character.name+' has killed a '+ship.name+' in a '+AttackerShip.name)
                                         .setThumbnail('https://images.evetech.net/types/'+message.victim.ship_type_id+'/render?size=128')
                                         .addField('Value', totalISK+' ISK')
                                         .setURL(message.zkb.url)
-                                        .setColor('#FEE75C')
+                                        .setColor('#EB459E')
                                         .setFooter('Steaming From Zkillboard')
                                         .setTimestamp(Date.now());
 
@@ -184,85 +153,128 @@ if (config.feeder_channel) {
                         WasKill = true;
                     }
                     if(WasKill == true){ break;}
-                } else { console.log(`Killmail is less than than ${config.kill_limit}ISK`);}
-            }
-            // check if gang kill
-            else if (message.attackers[i].alliance_id && message.attackers[i].corporation_id == '2014367342' ) {
-                // if pod break loop 
-                console.log(message.zkb.url);
-                
-                if (message.zkb.totalValue > config.kill_limit) {
-                    if (message.attackers[i].character_id) {                        
-                        request("https://esi.evetech.net/latest/characters/"+message.attackers[i].character_id+"/?datasource=tranquility", function (error, response, body) {
-                                // check if error is null
-                            if (!error && response.statusCode == 200) {
-                                // parse response
-                                let character = JSON.parse(body);
-                                // request to get 'https://esi.evetech
-                                request("https://esi.evetech.net/latest/universe/types/"+message.victim.ship_type_id+"/?datasource=tranquility&language=en", function (error, response, body) {
-                                    let ship = JSON.parse(body);
-                                    request("https://esi.evetech.net/latest/universe/types/"+message.attackers[i].ship_type_id+"/?datasource=tranquility&language=en", function (error, response, body) {
-                                        let AttackerShip = JSON.parse(body);
-                                        const embed = new MessageEmbed()
-                                        .setTitle('KILL ALERT')
-                                        .setDescription(character.name+' got on a '+ship.name+' in a '+AttackerShip.name)
-                                        .setThumbnail('https://images.evetech.net/types/'+message.victim.ship_type_id+'/render?size=128')
-                                        .addField('Value', totalISK+' ISK')
-                                        .setURL(message.zkb.url)
-                                        .setColor('#57F287')
-                                        .setFooter('Steaming From Zkillboard')
-                                        .setTimestamp(Date.now());
+                }
 
-                                        console.log(`${character.name} killed a ${ship.name}`);
-
-                                        client.channels.cache.get(config.feeder_channel).send({ embeds: [embed] });
-                                    });
-                                });
-                            }
-                        });
-                        AlreadySent = true;
-                        WasKill = true;
-                    }
-                    if(WasKill == true){ break;}
-                } else { console.log(`Killmail is less than than ${config.kill_limit}ISK`);}
-            } else { console.log("Wasn't BUSA"); }
-        }
-
-        if (message.victim.corporation_id == '2014367342') {
-            // check if zkb.totalValue is greater than 500000000 
-            console.log(message.zkb.url);
-            if (message.zkb.totalValue > config.loss_limit) {
-                // request json from "https://esi.evetech.net/latest/characters/96834527/?datasource=tranquility" and get name from response
-                request("https://esi.evetech.net/latest/characters/"+message.victim.character_id+"/?datasource=tranquility", function (error, response, body) {
+                // check if solo kill
+                if (message.zkb.solo == true && message.attackers[i].corporation_id == '2014367342' ) {
+                    // if pod break loop 
+                    console.log(message.zkb.url);
+                    
+                    if (message.zkb.totalValue > config.kill_limit) {
+                        if (message.attackers[i].character_id) {                        
+                            request("https://esi.evetech.net/latest/characters/"+message.attackers[i].character_id+"/?datasource=tranquility", function (error, response, body) {
                                     // check if error is null
-                                    if (!error && response.statusCode == 200) {
-                                        // parse response
-                                        let character = JSON.parse(body);
-                                        // request to get 'https://esi.evetech.net/latest/universe/types/623/?datasource=tranquility&language=en' and get name from response
-                                        request("https://esi.evetech.net/latest/universe/types/"+message.victim.ship_type_id+"/?datasource=tranquility&language=en", function (error, response, body) {
-                                            let ship = JSON.parse(body);
-        
+                                if (!error && response.statusCode == 200) {
+                                    // parse response
+                                    let character = JSON.parse(body);
+                                    // request to get 'https://esi.evetech
+                                    request("https://esi.evetech.net/latest/universe/types/"+message.victim.ship_type_id+"/?datasource=tranquility&language=en", function (error, response, body) {
+                                        let ship = JSON.parse(body);
+                                        request("https://esi.evetech.net/latest/universe/types/"+message.attackers[i].ship_type_id+"/?datasource=tranquility&language=en", function (error, response, body) {
+                                            let AttackerShip = JSON.parse(body);
                                             const embed = new MessageEmbed()
-                                            .setTitle('FEEDER ALERT')
-                                            .setDescription(`${character.name} has lost a ${ship.name}`)
+                                            .setTitle('SOLO ALERT')
+                                            .setDescription(character.name+' has killed a '+ship.name+' in a '+AttackerShip.name)
                                             .setThumbnail('https://images.evetech.net/types/'+message.victim.ship_type_id+'/render?size=128')
                                             .addField('Value', totalISK+' ISK')
                                             .setURL(message.zkb.url)
-                                            .setColor('#ED4245')
+                                            .setColor('#FEE75C')
                                             .setFooter('Steaming From Zkillboard')
-                                            .setTimestamp(Date.now());   
-        
-                                            console.log(`${character.name} fed a ${ship.name}`);
-        
+                                            .setTimestamp(Date.now());
+
+                                            console.log(`${character.name} killed a ${ship.name}`);
+
                                             client.channels.cache.get(config.feeder_channel).send({ embeds: [embed] });
-                                            
                                         });
-                                    }
-                });
-                        
-            } else { console.log(`Lossmail wasnt greater than ${config.loss_limit}ISK`); }
-        }
-    });
+                                    });
+                                }
+                            });
+                            AlreadySent = true;
+                            WasKill = true;
+                        }
+                        if(WasKill == true){ break;}
+                    } else { console.log(`Killmail is less than than ${config.kill_limit}ISK`);}
+                }
+                // check if gang kill
+                else if (message.attackers[i].alliance_id && message.attackers[i].corporation_id == '2014367342' ) {
+                    // if pod break loop 
+                    console.log(message.zkb.url);
+                    
+                    if (message.zkb.totalValue > config.kill_limit) {
+                        if (message.attackers[i].character_id) {                        
+                            request("https://esi.evetech.net/latest/characters/"+message.attackers[i].character_id+"/?datasource=tranquility", function (error, response, body) {
+                                    // check if error is null
+                                if (!error && response.statusCode == 200) {
+                                    // parse response
+                                    let character = JSON.parse(body);
+                                    // request to get 'https://esi.evetech
+                                    request("https://esi.evetech.net/latest/universe/types/"+message.victim.ship_type_id+"/?datasource=tranquility&language=en", function (error, response, body) {
+                                        let ship = JSON.parse(body);
+                                        request("https://esi.evetech.net/latest/universe/types/"+message.attackers[i].ship_type_id+"/?datasource=tranquility&language=en", function (error, response, body) {
+                                            let AttackerShip = JSON.parse(body);
+                                            const embed = new MessageEmbed()
+                                            .setTitle('KILL ALERT')
+                                            .setDescription(character.name+' got on a '+ship.name+' in a '+AttackerShip.name)
+                                            .setThumbnail('https://images.evetech.net/types/'+message.victim.ship_type_id+'/render?size=128')
+                                            .addField('Value', totalISK+' ISK')
+                                            .setURL(message.zkb.url)
+                                            .setColor('#57F287')
+                                            .setFooter('Steaming From Zkillboard')
+                                            .setTimestamp(Date.now());
+
+                                            console.log(`${character.name} killed a ${ship.name}`);
+
+                                            client.channels.cache.get(config.feeder_channel).send({ embeds: [embed] });
+                                        });
+                                    });
+                                }
+                            });
+                            AlreadySent = true;
+                            WasKill = true;
+                        }
+                        if(WasKill == true){ break;}
+                    } else { console.log(`Killmail is less than than ${config.kill_limit}ISK`);}
+                } else { console.log("Wasn't BUSA"); }
+            }
+
+            if (message.victim.corporation_id == '2014367342') {
+                // check if zkb.totalValue is greater than 500000000 
+                console.log(message.zkb.url);
+                if (message.zkb.totalValue > config.loss_limit) {
+                    // request json from "https://esi.evetech.net/latest/characters/96834527/?datasource=tranquility" and get name from response
+                    request("https://esi.evetech.net/latest/characters/"+message.victim.character_id+"/?datasource=tranquility", function (error, response, body) {
+                                        // check if error is null
+                                        if (!error && response.statusCode == 200) {
+                                            // parse response
+                                            let character = JSON.parse(body);
+                                            // request to get 'https://esi.evetech.net/latest/universe/types/623/?datasource=tranquility&language=en' and get name from response
+                                            request("https://esi.evetech.net/latest/universe/types/"+message.victim.ship_type_id+"/?datasource=tranquility&language=en", function (error, response, body) {
+                                                let ship = JSON.parse(body);
+            
+                                                const embed = new MessageEmbed()
+                                                .setTitle('FEEDER ALERT')
+                                                .setDescription(`${character.name} has lost a ${ship.name}`)
+                                                .setThumbnail('https://images.evetech.net/types/'+message.victim.ship_type_id+'/render?size=128')
+                                                .addField('Value', totalISK+' ISK')
+                                                .setURL(message.zkb.url)
+                                                .setColor('#ED4245')
+                                                .setFooter('Steaming From Zkillboard')
+                                                .setTimestamp(Date.now());   
+            
+                                                console.log(`${character.name} fed a ${ship.name}`);
+            
+                                                client.channels.cache.get(config.feeder_channel).send({ embeds: [embed] });
+                                                
+                                            });
+                                        }
+                    });
+                            
+                } else { console.log(`Lossmail wasnt greater than ${config.loss_limit}ISK`); }
+            }
+        };
+    }
 }
+
+connect();
 
 client.login(config.token);

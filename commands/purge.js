@@ -121,7 +121,7 @@ module.exports = {
 	exec: (call) => {
         const start = window.performance.now();
         // check if users has role director
-        if (call.message.member.roles.cache.find(r => r.name === 'Director')) {
+        if (call.message.member.roles.cache.find(r => r.name === 'Director') || call.message.member.roles.cache.find(r => r.name === 'Management')) {
             call.message.channel.send('Creating purge list, this might take a while...');
 
             // call getFromSeat then console.log the result

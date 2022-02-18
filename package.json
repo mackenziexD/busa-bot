@@ -11,6 +11,7 @@
     "jsdom": "^19.0.0",
     "node-fetch": "^2.6.7",
     "perf_hooks": "^0.0.1",
+    "reconnecting-websocket": "^4.4.0",
     "request": "^2.88.2",
     "ws": "^8.5.0"
   }
