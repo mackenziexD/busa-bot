@@ -233,7 +233,7 @@ var connect = function(){
                         }
                         if(WasKill == true){ break;}
                     } else { console.log(`Killmail is less than than ${config.kill_limit}ISK`);}
-                } else { console.log("Wasn't BUSA"); }
+                }
             }
 
             if (message.victim.corporation_id == '2014367342') {
