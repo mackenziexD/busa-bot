@@ -98,8 +98,7 @@ module.exports = {
 	exec: (call) => {
         const start = window.performance.now();
         // check if users has role director
-        if (call.message.member.roles.cache.find(r => r.name === 'Director')) {
-            // list all users with role director from discord
+        if (call.message.member.roles.cache.find(r => r.name === 'Director') || call.message.member.roles.cache.find(r => r.name === 'Management') || call.message.member.roles.cache.find(r => r.name === 'SeAT Admin')) {
             // call.message.guild.id
 
             
