@@ -107,12 +107,14 @@ module.exports = {
             .then(m => {
                 // loop through m and get nicknames
                 let nicknames = [];
+                // check if member has role 'BUSA'
                 m.forEach(member => {
-                    // check if not bot
-                    if (!member.user.bot) {
-                        nicknames.push(member.nickname ?? member.user.username);
+                    if (member.roles.cache.find(r => r.name === 'BUSA') && !member.user.bot) {
+                        nicknames.push(member.user.username ?? member.nickname);
                     }
                 });
+
+                console.log(nicknames);
 
 
                 // call getFromSeat() to get all users from seat
