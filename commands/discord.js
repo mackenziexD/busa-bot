@@ -108,9 +108,7 @@ module.exports = {
                 let nicknames = [];
                 // check if member has role 'BUSA'
                 m.forEach(member => {
-                    if (member.roles.cache.find(r => r.name === 'BUSA') && !member.user.bot) {
-                        nicknames.push(member.nickname ?? member.user.username);
-                    }
+                    nicknames.push(member.nickname ?? member.user.username);
                 });
 
                 console.log(nicknames);
@@ -137,7 +135,7 @@ module.exports = {
                                 names2.push(name);
                             });
                             // loop through seat
-                            let diff = getDiff(nicknames, names2);
+                            let diff = getDiff(names2, nicknames);
                             let text = '';
                             diff.forEach(name => {
                                 text += `${name}\n`;
