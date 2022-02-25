@@ -9,31 +9,6 @@ const request = require('request');
 let totalPages = 0;
 let currentPage = 0;
 
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-
-function getDiff (a1, a2) {
-
-    var a = [], diff = [];
-
-    for (var i = 0; i < a1.length; i++) {
-        a[a1[i]] = true;
-    }
-
-    for (var i = 0; i < a2.length; i++) {
-        if (a[a2[i]]) {
-            delete a[a2[i]];
-        } else {
-            a[a2[i]] = true;
-        }
-    }
-
-    for (var k in a) {
-        diff.push(k);
-    }
-
-    return diff;
-}
-
 function getMatch(a, b) {
     var matches = [];
 
@@ -108,7 +83,9 @@ module.exports = {
                 let nicknames = [];
                 // check if member has role 'BUSA'
                 m.forEach(member => {
-                    nicknames.push(member.nickname ?? member.user.username);
+                    if (member.roles.cache.find(r => r.name === 'BUSA') || member.roles.cache.find(r => r.name === 'Dexster') && !member.user.bot) {
+                        nicknames.push(member.nickname ?? member.user.username);
+                    }
                 });
 
                 console.log(nicknames);
@@ -135,7 +112,7 @@ module.exports = {
                                 names2.push(name);
                             });
                             // loop through seat
-                            let diff = getDiff(names2, nicknames);
+                            let diff = names2.filter(x => !nicknames.includes(x));
                             let text = '';
                             diff.forEach(name => {
                                 text += `${name}\n`;
