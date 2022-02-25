@@ -109,7 +109,7 @@ module.exports = {
                 // check if member has role 'BUSA'
                 m.forEach(member => {
                     if (member.roles.cache.find(r => r.name === 'BUSA') && !member.user.bot) {
-                        nicknames.push(member.user.username ?? member.nickname);
+                        nicknames.push(member.nickname ?? member.user.username);
                     }
                 });
 
