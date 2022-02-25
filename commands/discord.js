@@ -11,6 +11,40 @@ let currentPage = 0;
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+function getDiff (a1, a2) {
+
+    var a = [], diff = [];
+
+    for (var i = 0; i < a1.length; i++) {
+        a[a1[i]] = true;
+    }
+
+    for (var i = 0; i < a2.length; i++) {
+        if (a[a2[i]]) {
+            delete a[a2[i]];
+        } else {
+            a[a2[i]] = true;
+        }
+    }
+
+    for (var k in a) {
+        diff.push(k);
+    }
+
+    return diff;
+}
+
+function getMatch(a, b) {
+    var matches = [];
+
+    for ( var i = 0; i < a.length; i++ ) {
+        for ( var e = 0; e < b.length; e++ ) {
+            if ( a[i] === b[e] ) matches.push( a[i] );
+        }
+    }
+    return matches;
+}
+
 async function getTotalPages () {
     const options = {
         headers: {
@@ -26,39 +60,6 @@ async function getTotalPages () {
     currentPage = json.meta.current_page;
 
     return;
-}
-
-async function getCharacter90DayKills (id) {
-    // get current month as number
-    let month = new Date().getMonth() + 1;
-
-    // make sure month is two digits
-    if (month < 10) {
-        month = '0' + month;
-    }
-    console.log(`https://zkillboard.com/api/stats/characterID/${id}/`)
-
-    const response = await fetch('https://zkillboard.com/api/stats/characterID/'+id+'/', {
-        headers: {
-            'User-Agent': 'Helious Jin-Mei',
-            'Content-Type': 'application/json'
-        }
-    });
-    const json = await response.json();
-
-	let total = 0;
-	for(var day in json.activity) {
-		// Activity object contains a max and a days key, skip over them
-		if(day == "max" || day == "days") {
-			continue;
-		}
-
-		for(var hour in json.activity[day]) {
-			total += json.activity[day][hour]
-		}
-	}
-
-    return total;
 }
 
 async function getFromSeat () {
@@ -117,27 +118,32 @@ module.exports = {
                 // call getFromSeat() to get all users from seat
                 getFromSeat()
                 .then(seat => {
-                    let names = "";
-                    let names2 = "";
+                    let names = [];
+                    let names2 = [];
                     // compare seat and nicknames and check which is not in nicknames and append name to names
-                    call.message.channel.send('**People not in discord:**');
-                    for (let i = 0; i < seat.length; i++) {
-                        // call https://evewho.com/api/corplist/2014367342 and check if seat[i] is in the list
-                        request(`https://evewho.com/api/corplist/2014367342`, (error, response, body) => {
+                        request(`https://evewho.com/api/corplist/2014367342/`, (error, response, body) => {
                             if (error) {
                                 console.log(error);
                             }
                             let json = JSON.parse(body);
 
-                            // check if seat[i] is in json.characters
-                            if (json.characters.includes(seat[i])) {
-                                if (!nicknames.includes(seat[i])) {
-                                    names += seat[i] + "\n";
-                                }
+                            const characters = json.characters;
+                            // loop through characters and get names
+                            for (let i = 0; i < characters.length; i++) {
+                                names.push(characters[i].name);
                             }
+                            getMatch(names, seat).forEach(name => {
+                                names2.push(name);
+                            });
+                            // loop through seat
+                            let diff = getDiff(nicknames, names2);
+                            let text = '';
+                            diff.forEach(name => {
+                                text += `${name}\n`;
+                            });
+                            call.message.channel.send(`**People not in discord:**\n${text}`);
+
                         });
-                    }
-                    console.log(names);
 
                 });
             })

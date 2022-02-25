@@ -98,7 +98,7 @@ module.exports = {
             if(channellookup) {
                 const name = call.args.join(' ');
                 let characterID = getCharacterID(name);
-                call.message.guild.channels.cache.get(channelID).send(`Searching for ${name} ...\nrequsted by ${call.message.author.username}`);
+                call.message.guild.channels.cache.get(channelID).send(`Searching for **${name}** ...\n\`\`\`\Requsted by ${call.message.author.username}\`\`\`\ `);
                 characterID
                 .then(result => getFromSeat(result), stepError)
                 .then(res => {

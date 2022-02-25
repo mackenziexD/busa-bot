@@ -6,6 +6,33 @@ module.exports = {
         let injector = 0;
         let plex = 0;
         let total = 0;
+        let text = "";
+
+        
+        let insult = "";
+        const random = Math.floor(Math.random() * 5) + 1;
+        // if random is 1, call good emoji
+        switch (random) {
+            case 1:
+                insult = "Pillock";
+                break;
+            case 2:
+                insult = "Wanker";
+                break;
+            case 3:
+                insult = "Spastic";
+                break;
+            case 4:
+                insult = "Birdbrain";
+                break;
+            case 5:
+                insult = "Village idiot";
+                break;
+        }
+        // check if args is not empty
+        if(call.args.length > 0) {
+            text += `**You dumb ${insult}**, you dont need to add names onto this command.\nBut `;
+        }
         
         fetch('https://evepraisal.com/appraisal/structured.json', {
             method: 'POST',
@@ -38,9 +65,9 @@ module.exports = {
                     total = total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                     // check if total start with -
                     if(total.charAt(0) == "-") {
-                        call.message.channel.send(`At the moment **its not** worth it, total profit is: **${total}**`);
+                        call.message.channel.send(`${text}At the moment **its not** worth it, total profit is: **${total}**`);
                     } else {
-                        call.message.channel.send(`At the moment **it is** worth it, total profit is: **${total}**`);
+                        call.message.channel.send(`${text}At the moment **it is** worth it, total profit is: **${total}**`);
                     }
                 })
             })

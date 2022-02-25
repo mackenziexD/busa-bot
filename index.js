@@ -82,7 +82,6 @@ var connect = function(){
 
     // ws.on('close)
     ws.onclose = function(err) {
-        client.channels.cache.get(config.feeder_channel).send('Socket Closed Because: ' + err.reason + '\nAttempting to reconnect...');
         console.log('Socket is closed. Reconnect will be attempted in 1 second.', err.reason);
         setTimeout(function() {
           connect();
