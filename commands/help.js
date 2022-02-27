@@ -14,7 +14,7 @@ module.exports = {
             .addField('!kills {character}', 'Pulls the last 7day and 90day kills of a character from zkillboard')
             .addField('!price {item}', 'Check the price of something at jita price')
             .addField('\u200B', '**Locked To Director**')
-            .addField('!lookup {character}', '\n Pulls main and alts from seat of character')
+            .addField('!alt {character}', '\n Pulls main and alts from seat of character')
             .addField('!setup-killfeed', '\n Pulls corp losses and kills from zkillboard with parameters that can be set') 
             .addField('!killfeed-update', '\n Updates the parameters for killfeed') 
             .addField('!discord', '\n See what members are not in discord')

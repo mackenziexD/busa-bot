@@ -20,7 +20,7 @@ async function getCharacterName (id) {
 }
 
 async function getCharacterID (name) {
-    const response = await fetch('https://esi.evetech.net/latest/search/?categories=character&datasource=tranquility&language=en&search='+encodeURI(name)+'&strict=false');
+    const response = await fetch('https://esi.evetech.net/latest/search/?categories=character&datasource=tranquility&language=en&search='+encodeURI(name)+'&strict=true');
     const json = await response.json();
     return json.character[0];
 }
@@ -83,7 +83,7 @@ async function getFromSeat (id) {
 
 
 module.exports = {
-	id: 'lookup',
+	id: 'alt',
 	exec: (call) => {
         let channellookup = false;
         let channelID = 0;
