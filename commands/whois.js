@@ -47,6 +47,12 @@ async function getCorpName (id) {
     return json;
 }
 
+async function getTimeInCorp (id) {
+    const response = await fetch(`https://esi.evetech.net/latest/characters/${id}/corporationhistory/?datasource=tranquility`, {headers: {'Content-Type': 'application/json', 'User-Agent': 'Helious Jin-Mei'}});
+    const json = await response.json();
+    return json;
+}
+
 async function getZkillStats (id) {
     sleep.sleep(1);
     const response = await fetch(`https://zkillboard.com/api/stats/characterID/${id}/`, {headers: {'Content-Type': 'application/json', 'User-Agent': 'Helious Jin-Mei'}});
@@ -60,22 +66,51 @@ async function getCharacterID (name) {
     return json.character[0];
 }
 
-function timeDifference(date1, date2) {
-    var oneDay = 24 * 60 * 60; // hours*minutes*secondsds
-    var firstDate = date1.getTime(); // convert to milliseconds
-    var secondDate = date2.getTime(); // convert to milliseconds
-    var seconds = Math.round(Math.abs(firstDate - secondDate) / 1000); //calculate the diffrence in seconds
-    // the difference object
-    var difference = {
-      "days": 0
+function joinedDate(startingDate, endingDate) {
+    var startDate = new Date(new Date(startingDate).toISOString().substr(0, 10));
+    if (!endingDate) {
+        endingDate = new Date().toISOString().substr(0, 10);    // need date in YYYY-MM-DD format
     }
-    //calculate all the days and substract it from the total
-    while (seconds >= oneDay) {
-      difference.days++;
-      seconds -= oneDay;
+    var endDate = new Date(endingDate);
+    if (startDate > endDate) {
+        var swap = startDate;
+        startDate = endDate;
+        endDate = swap;
     }
-    return difference;
-  }
+    var startYear = startDate.getFullYear();
+    var february = (startYear % 4 === 0 && startYear % 100 !== 0) || startYear % 400 === 0 ? 29 : 28;
+    var daysInMonth = [31, february, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+    var yearDiff = endDate.getFullYear() - startYear;
+    var monthDiff = endDate.getMonth() - startDate.getMonth();
+    if (monthDiff < 0) {
+        yearDiff--;
+        monthDiff += 12;
+    }
+    var dayDiff = endDate.getDate() - startDate.getDate();
+    if (dayDiff < 0) {
+        if (monthDiff > 0) {
+            monthDiff--;
+        } else {
+            yearDiff--;
+            monthDiff = 11;
+        }
+        dayDiff += daysInMonth[startDate.getMonth()];
+    }
+
+    let string = "";
+    if (yearDiff > 0) {
+        string += yearDiff + " year" + (yearDiff > 1 ? "s" : "") + ", ";
+    }
+    if (monthDiff > 0) {
+        string += monthDiff + " month" + (monthDiff > 1 ? "s" : "") + ", ";
+    }
+    if (dayDiff > 0) {
+        string += dayDiff + " day" + (dayDiff > 1 ? "s" : "");
+    }
+    return string;
+}
+
 
 function dateDiff(startingDate, endingDate) {
     var startDate = new Date(new Date(startingDate).toISOString().substr(0, 10));
@@ -147,7 +182,7 @@ module.exports = {
                 var now = new Date();
 
                 var age = dateDiff(dob, now);
-
+                var None = "None";
                 // create embed
                 const embed = new MessageEmbed()
                 .setColor('#0099ff')
@@ -183,27 +218,46 @@ module.exports = {
                                         return Promise.all(promises);
                                     })
                                     .then(function(res4) {
-                                        embed.addField('Corporation', `${res[0].name}`, true)
-                                        embed.addField('Alliance', `${res2[0].name ?? None}`, true);
-                                        embed.addField('Kills / Losses', `${res3[0].shipsDestroyed}/${res3[0].shipsLost}`, true);
-                                        // 2022-02-19T02:24:41Z
-                                        // get res4[0].killmail_time and work out the time difference
-                                        let then = new Date(res4[0].killmail_time);
-                                        let now = new Date();
+                                        getTimeInCorp(Charid).then(res => {
+                                            const promises = [];
+                                            promises.push(res);
+                                            return Promise.all(promises);
+                                        })
+                                        .then(function(res5) {
 
-                                        let timeDiff = timeDifference(then, now);
+                                            if(typeof res3[0].shipsDestroyed === 'undefined') {
+                                                var shipsDestroyed = 0;
+                                                var shipsLost = 0;
+                                            } else {
+                                                var shipsDestroyed = res3[0].shipsDestroyed;
+                                                var shipsLost = res3[0].shipsLost;
+                                            }
 
-                                        let days = "";
+                                            let now = new Date();
+                                            let joined = new Date(res5[0][0].start_date);
 
-                                        if(timeDiff.days > 0) {
-                                            days = `${timeDiff.days} days`;
-                                        } else {
-                                            days += "Today";
-                                        }
+                                            embed.addField('Corporation', `${res[0].name}\n(${joinedDate(joined, now)})`, true)
+                                            embed.addField('Alliance', `${res2[0].name ?? None}`, true);
+                                            embed.addField('Kills / Losses', `${shipsDestroyed}/${shipsLost}`, true);
+                                            // 2022-02-19T02:24:41Z
+                                            // get res4[0].killmail_time and work out the time difference
+                                            let then = new Date(res4[0].killmail_time);
 
-                                        embed.addField('Last killboard activity', `${days}`, true);
+                                            let timeDiff = dateDiff(then, now);
+                                            let days = "";
 
-                                        call.message.channel.send({ embeds: [embed] });
+                                            if(timeDiff.days > 0) {
+                                                days = `${timeDiff.days} days`;
+                                            } else if (res4[0].error) {
+                                                days += "No killmails found";
+                                            } else {
+                                                days += "Today";
+                                            }
+
+                                            embed.addField('Last killboard activity', `${days}`, true);
+
+                                            call.message.channel.send({ embeds: [embed] });
+                                        });
                                     });
                                 }).catch(function(err) {
                                     console.log(err);
