@@ -12,6 +12,7 @@ module.exports = {
             .setDescription('These are the commands you can use')
             .addField('!help', 'Shows this message')
             .addField('!kills {character}', 'Pulls the last 7day and 90day kills of a character from zkillboard')
+            .addField('!who {character}', 'Pulls information of the character')
             .addField('!price {item}', 'Check the price of something at jita price')
             .addField('\u200B', '**Locked To Director**')
             .addField('!alt {character}', '\n Pulls main and alts from seat of character')
@@ -31,6 +32,7 @@ module.exports = {
             .addField('!help', 'Shows this message')
             .addField('!price {item}', 'Check the price of something at jita price')
             .addField('!kills {character}', 'Pulls the last 7day and 90day kills of a character from zkillboard')
+            .addField('!who {character}', 'Pulls information of the character')
             .setTimestamp(Date.now())
             .setFooter({ text: 'Created By: Helious#4607'});
             call.message.channel.send({ embeds: [embed] });
