@@ -75,7 +75,6 @@ var connect = function(){
     const ws = new WebSocket("wss://zkillboard.com/websocket/");
 
     ws.onerror = function(err) {
-        client.channels.cache.get(config.feeder_channel).send('Error: ' + err);
         console.error(err);
         ws.close();
     };
