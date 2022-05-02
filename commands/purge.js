@@ -144,7 +144,7 @@ module.exports = {
         const start = window.performance.now();
         // check if users has role director
         if (call.message.member.roles.cache.find(r => r.name === 'Director') || call.message.member.roles.cache.find(r => r.name === 'Management')) {
-            call.message.channel.send('Creating purge list,\n this list gets created every day at 12:00 AM GMT: <http://time.nakamura-labs.com/?#1640995200>');
+            call.message.channel.send('Getting Purge List,\nThis list gets created every day at 00:00 EVE TIME: <http://time.nakamura-labs.com/?#1640995200>');
 
             
             // call getFromSeat then console.log the result
