@@ -20,7 +20,7 @@ function isset (accessor) {
       // referencing a property of undefined
       return false
     }
-  }
+}
 
 client.on('messageCreate', async message => {
     // check if message contains "good bot"
