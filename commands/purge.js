@@ -2,8 +2,11 @@ const config = require('../config.json');
 const fetch = require('node-fetch');
 const { MessageEmbed } = require('discord.js');
 const { performance } = require('perf_hooks');
-const { JSDOM } = require("jsdom")
-const { window } = new JSDOM()
+const { JSDOM } = require("jsdom");
+const { window } = new JSDOM();
+const schedule = require('node-schedule');
+const fsPromises = require('fs').promises;
+const fs = require('fs');
 
 let totalPages = 0;
 let currentPage = 0;
@@ -116,16 +119,36 @@ async function getFromSeat () {
 
 }
 
+// create purge list every day at 12:00 AM and store in purge.json
+async function purge () {
+    const ToBePurged = await getFromSeat();
+    return ToBePurged;
+}
+
+schedule.scheduleJob('0 0 * * *', () => {
+    purge().then(ToBePurged => {
+        fs.writeFileSync('purge.json', JSON.stringify(ToBePurged));
+    });
+})
+
+const func = async filenames => {
+    for(let fn of filenames) {
+      let data = await fsPromises.readFile(fn)
+      return data.toString('utf-8');
+    }
+}
+
 module.exports = {
 	id: 'purge',
 	exec: (call) => {
         const start = window.performance.now();
         // check if users has role director
         if (call.message.member.roles.cache.find(r => r.name === 'Director') || call.message.member.roles.cache.find(r => r.name === 'Management')) {
-            call.message.channel.send('Creating purge list, this might take a while...');
+            call.message.channel.send('Creating purge list,\n this list gets created every day at 12:00 AM GMT: <http://time.nakamura-labs.com/?#1640995200>');
 
+            
             // call getFromSeat then console.log the result
-            getFromSeat(call.message.author.id).then(res => {
+            func(['purge.json']).then(res => {
 
                     // inside a command, event listener, etc.
                 const embed = new MessageEmbed()
@@ -134,13 +157,15 @@ module.exports = {
                     .setDescription(`list of mains that accross all characters have  less than 30 kills in 90 days`)
                     .setTimestamp(Date.now())
 
-                    // loop through res.associated_character_ids to get all id's
-                    console.log(res);
-
 
                 const promises = [embed];
-                for (let i = 0; i < res.length; i++) {
-                    promises.push(getCharacterName(res[i]));
+
+                let dataArray = JSON.parse(res);
+
+                // loop through purge.json
+                for (let i = 0; i < dataArray.length; i++) {
+                    // get character name
+                    promises.push(getCharacterName(dataArray[i]));
                 }
 
                 return Promise.all(promises);

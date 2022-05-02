@@ -20,6 +20,7 @@ module.exports = {
             .addField('!killfeed-update', '\n Updates the parameters for killfeed') 
             .addField('!discord', '\n See what members are not in discord')
             .addField('!purge', '\n Get characters from seat that have less than 30 kills in 90 days')
+            .addField('!main', '\n Get the main character of an alt from seat')
             .setTimestamp(Date.now())
             .setFooter({ text: 'Created By: Helious#4607'});
             
