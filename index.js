@@ -23,34 +23,7 @@ function isset (accessor) {
 }
 
 client.on('messageCreate', async message => {
-    // check if message contains "good bot"
-    if (message.content.toLowerCase().includes("good bot")) {
-        // create a random number between 1 and 5
-        let emoji = "";
-        const random = Math.floor(Math.random() * 5) + 1;
-        // if random is 1, call good emoji
-        switch (random) {
-            case 1:
-                emoji = ":smile:";
-                break;
-            case 2:
-                emoji = ":smiley:";
-                break;
-            case 3:
-                emoji = ":grinning:";
-                break;
-            case 4:
-                emoji = ":grin:";
-                break;
-            case 5:
-                emoji = ":smirk:";
-                break;
-            default:
-                emoji = ":BUSA:";
-        }
-
-        message.channel.send(`Thank you! ${emoji}`);
-    }   
+    // check if message contains "good bot"   
 });
 
 

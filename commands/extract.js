@@ -48,9 +48,10 @@ module.exports = {
                     let FinalSP = (spNoComma - 5500000);
                     // convert finalSP to int
                     let FinalSPInt = parseInt(FinalSP);
+                    console.log(FinalSPInt);
                     // check if FinalSP starts with -
                     if(FinalSPInt > 0) {
-                        let extractors = Math.floor(spNoComma/500000);
+                        let extractors = Math.floor(FinalSPInt/500000);
                         
                         total = ((extractors * injector) - (extractors * extractor));
                         // add comman every 3 digits to total

@@ -1,4 +1,13 @@
 {
+  "name": "busa-bot",
+  "version": "1.0",
+  "description": "BUSA Corp Discord Bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "callbackify": "^1.1.0",
     "d.js-command-handler": "^3.2.1",
@@ -14,6 +23,7 @@
     "perf_hooks": "^0.0.1",
     "reconnecting-websocket": "^4.4.0",
     "request": "^2.88.2",
+    "request-promise": "^4.2.6",
     "sleep": "^6.3.0",
     "ws": "^8.5.0"
   }
